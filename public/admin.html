@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Live Responses</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        
+        /* Login Page */
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+        }
+        
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .login-form input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .login-btn {
+            width: 100%;
+            background: #3498db;
+            color: white;
+            padding: 16px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .login-btn:hover {
+            background: #2980b9;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        /* Dashboard */
+        .dashboard-container {
+            display: none;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .live-badge {
+            background: #ff4757;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .refresh-btn {
+            background: #3498db;
+            color: white;
+        }
+        
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            padding: 30px 40px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .responses-container {
+            padding: 0 40px 40px;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #2c3e50;
+            color: white;
+            padding: 18px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .new-entry {
+            animation: highlight 2s;
+        }
+        
+        @keyframes highlight {
+            0% { background: #e8f5e9; }
+            100% { background: white; }
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #95a5a6;
+        }
+        
+        .last-updated {
+            text-align: right;
+            padding: 10px 40px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-container">
+        <h2>🔐 Admin Login</h2>
+        <form id="loginForm" class="login-form">
+            <input type="password" id="adminPassword" 
+                   placeholder="Enter Admin Password" required>
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+        <div id="loginError" class="error-message">❌ Invalid Password</div>
+    </div>
+    
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard-container">
+        <div class="header">
+            <div>
+                <h1>📊 Live Responses Dashboard <span class="live-badge">LIVE</span></h1>
+                <p style="color: #7f8c8d; margin-top: 5px;">
+                    Student Form: <span id="formUrl"></span>
+                </p>
+            </div>
+            <div class="controls">
+                <button class="btn refresh-btn" onclick="fetchResponses()">
+                    🔄 Refresh
+                </button>
+                <button class="btn logout-btn" onclick="logout()">
+                    🔓 Logout
+                </button>
+            </div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" id="totalResponses">0</div>
+                <div class="stat-label">Total Responses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayResponses">0</div>
+                <div class="stat-label">Today's Responses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="last24Hours">0</div>
+                <div class="stat-label">Last 24 Hours</div>
+            </div>
+        </div>
+        
+        <div class="last-updated">
+            Last Updated: <span id="lastUpdated">Never</span>
+        </div>
+        
+        <div class="responses-container">
+            <div class="table-container">
+                <table id="responseTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Timestamp</th>
+                            <th>Name</th>
+                            <th>Date of Birth</th>
+                            <th>Mobile No</th>
+                            <th>Father's Name</th>
+                            <th>Aadhar No</th>
+                        </tr>
+                    </thead>
+                    <tbody id="responseBody">
+                        <!-- Responses will be loaded here -->
+                    </tbody>
+                </table>
+                <div id="noData" class="no-data" style="display: none;">
+                    📭 No responses yet. Form is waiting for submissions.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = '/api';
+        
+        // Check login status
+        async function checkLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.loggedIn) {
+                    showDashboard();
+                } else {
+                    document.getElementById('loginPage').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('loginPage').style.display = 'block';
+            }
+        }
+        
+        // Handle login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('adminPassword').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showDashboard();
+                } else {
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+        
+        // Show dashboard
+        function showDashboard() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            
+            // Show form URL
+            document.getElementById('formUrl').textContent = window.location.origin;
+            
+            // Start auto-refresh
+            fetchResponses();
+            setInterval(fetchResponses, 3000); // Refresh every 3 seconds
+        }
+        
+        // Fetch responses
+        async function fetchResponses() {
+            try {
+                const response = await fetch(`${API_BASE}/responses`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResponses(data.responses);
+                    updateStats(data.responses);
+                    
+                    // Update timestamp
+                    document.getElementById('lastUpdated').textContent = 
+                        new Date().toLocaleTimeString('hi-IN');
+                }
+            } catch (error) {
+                console.error('Error fetching responses:', error);
+            }
+        }
+        
+        // Display responses in table
+        function displayResponses(responses) {
+            const tableBody = document.getElementById('responseBody');
+            const noDataDiv = document.getElementById('noData');
+            
+            if (!responses || responses.length === 0) {
+                tableBody.innerHTML = '';
+                noDataDiv.style.display = 'block';
+                return;
+            }
+            
+            noDataDiv.style.display = 'none';
+            
+            // Create table rows
+            let html = '';
+            responses.forEach((response, index) => {
+                const isNew = index === 0; // Highlight newest entry
+                
+                html += `
+                    <tr class="${isNew ? 'new-entry' : ''}">
+                        <td>${index + 1}</td>
+                        <td>
+                            <span class="timestamp">
+                                ${new Date(response.timestamp).toLocaleString('hi-IN')}
+                            </span>
+                        </td>
+                        <td><strong>${response.name}</strong></td>
+                        <td>${response.dob}</td>
+                        <td>${response.mobile}</td>
+                        <td>${response.father}</td>
+                        <td>${response.aadhar}</td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+        
+        // Update statistics
+        function updateStats(responses) {
+            const total = responses.length;
+            document.getElementById('totalResponses').textContent = total;
+            
+            // Count today's responses
+            const today = new Date().toDateString();
+            const todayCount = responses.filter(r => 
+                new Date(r.timestamp).toDateString() === today
+            ).length;
+            document.getElementById('todayResponses').textContent = todayCount;
+            
+            // Count last 24 hours
+            const last24Hours = Date.now() - (24 * 60 * 60 * 1000);
+            const last24Count = responses.filter(r => 
+                new Date(r.timestamp).getTime() > last24Hours
+            ).length;
+            document.getElementById('last24Hours').textContent = last24Count;
+        }
+        
+        // Logout
+        async function logout() {
+            // Clear session cookie
+            document.cookie = 'admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // Redirect to login
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('adminPassword').value = '';
+        }
+        
+        // Initialize
+        checkLogin();
+    </script>
+</body>
+</html>
