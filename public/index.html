@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        
+        input:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(76,175,80,0.2);
+        }
+        
+        .submit-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .admin-link {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .admin-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .admin-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>📝 Student Registration</h1>
+        <p class="subtitle">सभी जानकारी सही से भरें</p>
+        
+        <div class="alert" id="alert"></div>
+        
+        <form id="studentForm">
+            <div class="form-group">
+                <label for="name">👤 पूरा नाम *</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="dob">📅 जन्म तिथि *</label>
+                <input type="date" id="dob" name="dob" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="mobile">📱 मोबाइल नंबर *</label>
+                <input type="tel" id="mobile" name="mobile" 
+                       pattern="[0-9]{10}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="father">👨‍👦 पिता का नाम *</label>
+                <input type="text" id="father" name="father" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="aadhar">🪪 आधार नंबर *</label>
+                <input type="text" id="aadhar" name="aadhar" 
+                       pattern="[0-9]{12}" required>
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                ✅ सबमिट करें
+            </button>
+        </form>
+        
+        <div class="admin-link">
+            <p>Admin के लिए: <a href="/admin">Admin Dashboard</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('studentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                dob: document.getElementById('dob').value,
+                mobile: document.getElementById('mobile').value,
+                father: document.getElementById('father').value,
+                aadhar: document.getElementById('aadhar').value
+            };
+            
+            try {
+                const response = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show success message
+                    const alertDiv = document.getElementById('alert');
+                    alertDiv.textContent = '✅ Form submitted successfully!';
+                    alertDiv.className = 'alert success';
+                    alertDiv.style.display = 'block';
+                    
+                    // Reset form
+                    document.getElementById('studentForm').reset();
+                    
+                    // Hide alert after 5 seconds
+                    setTimeout(() => {
+                        alertDiv.style.display = 'none';
+                    }, 5000);
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                const alertDiv = document.getElementById('alert');
+                alertDiv.textContent = `❌ Error: ${error.message}`;
+                alertDiv.className = 'alert error';
+                alertDiv.style.display = 'block';
+                
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>
