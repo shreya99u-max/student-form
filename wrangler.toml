@@ -1,0 +1,13 @@
+name = "student-form-api"
+main = "functions/api/_worker.js"
+compatibility_date = "2024-01-01"
+
+[env.production]
+ADMIN_PASSWORD = "your_secure_password_here"
+
+kv_namespaces = [
+    { binding = "KV_RESPONSES", id = "YOUR_KV_NAMESPACE_ID" }
+]
+
+[vars]
+DEBUG_MODE = false
